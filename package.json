@@ -1,0 +1,19 @@
+{
+  "name": "afip-sdk-billing-example",
+  "version": "1.0.0",
+  "description": "AfipSDK Fastify example",
+  "license": "ISC",
+  "author": "Lucas",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@afipsdk/afip.js": "^1.2.2",
+    "@fastify/cors": "^11.2.0",
+    "dotenv": "^17.2.4",
+    "fastify": "^5.7.4",
+    "handlebars": "^4.7.8"
+  }
+}

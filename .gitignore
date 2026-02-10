@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Lock file
+package-lock.json
+
+# Key and cert path
+afip-keys/
+
+# Environment variables
+.env
