@@ -8,8 +8,7 @@ body {
 	font-family: Arial, sans-serif;
 	gap: 15px;
 }
-
-button {
+#bill-button {
 	padding: 12px 32px;
 	font-size: 16px;
 	cursor: pointer;
@@ -19,15 +18,26 @@ button {
 	color: #fff;
 }
 
-button:hover:not(:disabled) {
+#bill-button:hover:not(:disabled) {
 	background-color: #1d4ed8;
 }
 
-button:disabled {
+#bill-button:disabled {
 	background-color: #93b4f5;
 	cursor: not-allowed;
 }
 
 #bill-link {
 	display: none;
+}
+
+#error {
+	color: #dc2626;
+	background-color: #fef2f2;
+	border: 1px solid #fecaca;
+	border-radius: 6px;
+	padding: 12px 24px;
+	max-width: 540px;
+	text-align: center;
+	word-break: break-word;
 }

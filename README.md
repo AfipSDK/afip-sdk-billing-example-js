@@ -14,9 +14,13 @@ Genera **Facturas B** a través de los web services de AFIP y devuelve un PDF de
 ## Requisitos previos
 
 - **Node.js** (v18 o superior, ya que usa ESM y top-level `await`)
-- **Certificado y clave privada** de AFIP (archivos `.crt` y `.key`)
 - **CUIT** del contribuyente emisor
 - **Access Token** de [Afip SDK](https://afipsdk.com/)
+
+**Opcional**
+- **Certificado y clave privada** de AFIP (archivos `.crt` y `.key`)
+Si se usa el cuit 20409378472 el certificado y key no son necesarios.
+
 
 ## Instalación
 
@@ -30,19 +34,21 @@ Crear un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
 ```env
 PORT=3000
-AFIP_CERT_PATH=./afip-keys/cert.crt
-AFIP_KEY_PATH=./afip-keys/key.key
-AFIP_CUIT=20123456789
 AFIP_ACCESS_TOKEN=tu_access_token
+AFIP_CUIT=20409378472
+
+--Opcional si se usa el cuit 20409378472--
+AFIP_KEY_PATH=./afip-keys/key.key
+AFIP_CERT_PATH=./afip-keys/cert.crt
 ```
 
 | Variable | Descripción |
 |---|---|
 | `PORT` | Puerto en el que corre el servidor |
-| `AFIP_CERT_PATH` | Ruta al certificado de AFIP |
-| `AFIP_KEY_PATH` | Ruta a la clave privada de AFIP |
 | `AFIP_CUIT` | CUIT del contribuyente emisor |
 | `AFIP_ACCESS_TOKEN` | Access token de Afip SDK |
+| `AFIP_CERT_PATH` | Ruta al certificado de AFIP |
+| `AFIP_KEY_PATH` | Ruta a la clave privada de AFIP |
 
 ## Uso
 
@@ -84,10 +90,6 @@ El servidor queda escuchando en `http://localhost:3000` (o el puerto configurado
 | `fecha_vencimiento_pago` | integer | (Opcional) Fecha de vencimiento del pago |
 
 La respuesta incluye la URL del PDF generado.
-
-### Frontend
-
-Abrir `front/index.html` en el navegador para usar la interfaz con un botón que genera una factura de prueba.
 
 ## Tecnologías
 

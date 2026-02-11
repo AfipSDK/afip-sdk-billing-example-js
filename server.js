@@ -1,19 +1,30 @@
 import Fastify from 'fastify';
-import cors from '@fastify/cors';
+import fastifyStatic from '@fastify/static';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import Handlebars from 'handlebars';
 import Afip from '@afipsdk/afip.js';
 import 'dotenv/config';
 
-const fastify = Fastify({ logger: true });
-await fastify.register(cors);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const cert = fs.readFileSync(process.env.AFIP_CERT_PATH, { encoding: 'utf8' });
-const key = fs.readFileSync(process.env.AFIP_KEY_PATH, { encoding: 'utf8' });
+const fastify = Fastify({ logger: true });
+await fastify.register(fastifyStatic, {
+	root: path.join(__dirname, 'public'),
+});
+
+let cert, key;
+if (process.env.AFIP_CERT_PATH && process.env.AFIP_KEY_PATH) {
+	cert = fs.readFileSync(process.env.AFIP_CERT_PATH, { encoding: 'utf8' });
+	key = fs.readFileSync(process.env.AFIP_KEY_PATH, { encoding: 'utf8' });
+}
+
 const billTemplate = Handlebars.compile(fs.readFileSync('./src/templates/bill.html', 'utf8'));
 const afip = new Afip({
-	key,
-	cert,
+	...(key && { key }),
+	...(cert && { cert }),
 	CUIT: Number(process.env.AFIP_CUIT),
 	access_token: process.env.AFIP_ACCESS_TOKEN,
 });
@@ -124,6 +135,7 @@ fastify.post('/bill', { schema: billSchema }, async function handler(request, re
 		marginBottom: 0.4, // Margen inferior en pulgadas. Usar 0.1 para ticket
 	};
 
+	// Agregamos los valores de la factura al template
 	const replacedBillTemplate = billTemplate({
 		punto_de_venta: String(punto_de_venta).padStart(4, '0'),
 		numero_de_factura: String(numero_de_factura).padStart(9, '0'),
@@ -156,7 +168,7 @@ fastify.post('/bill', { schema: billSchema }, async function handler(request, re
 });
 
 try {
-	await fastify.listen({ port: Number(process.env.PORT) });
+	await fastify.listen({ port: Number(process.env.PORT) || 3000 });
 } catch (err) {
 	fastify.log.error(err);
 	process.exit(1);
