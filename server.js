@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import Handlebars from 'handlebars';
 import Afip from '@afipsdk/afip.js';
 import 'dotenv/config';
+import { BBillSchema } from './src/schemas/bBill.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,36 +30,7 @@ const afip = new Afip({
 	access_token: process.env.AFIP_ACCESS_TOKEN,
 });
 
-const billSchema = {
-	body: {
-		type: 'object',
-		required: [
-			'numero_de_documento',
-			'tipo_de_documento',
-			'importe_gravado',
-			'importe_exento_iva',
-			'importe_iva',
-			'punto_de_venta',
-			'concepto',
-			'condicion_iva_receptor',
-		],
-		properties: {
-			numero_de_documento: { type: 'number' },
-			tipo_de_documento: { type: 'integer', enum: [80, 86, 96, 99] },
-			importe_gravado: { type: 'number', exclusiveMinimum: 0 },
-			importe_exento_iva: { type: 'number', minimum: 0 },
-			importe_iva: { type: 'number', exclusiveMinimum: 0 },
-			punto_de_venta: { type: 'integer' },
-			concepto: { type: 'integer', enum: [1, 2, 3] },
-			condicion_iva_receptor: { type: 'integer', enum: [1, 4, 5, 6, 7, 8, 9, 10, 13, 15, 16] },
-			fecha_servicio_desde: { type: 'integer', default: null, nullable: true },
-			fecha_servicio_hasta: { type: 'integer', default: null, nullable: true },
-			fecha_vencimiento_pago: { type: 'integer', default: null, nullable: true },
-		},
-	},
-};
-
-fastify.post('/bill', { schema: billSchema }, async function handler(request, reply) {
+fastify.post('/bill', { schema: BBillSchema }, async function handler(request, reply) {
 	const {
 		numero_de_documento,
 		tipo_de_documento,
@@ -122,7 +94,36 @@ fastify.post('/bill', { schema: billSchema }, async function handler(request, re
 	/**
 	 * Generamos el PDF
 	 **/
+	const pdfResponse = await generatePDF(
+		punto_de_venta,
+		numero_de_factura,
+		fecha,
+		fecha_servicio_desde,
+		fecha_servicio_hasta,
+		fecha_vencimiento_pago,
+		numero_de_documento,
+		importe_total,
+		condicion_iva_receptor,
+		billResponse.CAE,
+		billResponse.CAEFchVto,
+	);
 
+	return pdfResponse;
+});
+
+async function generatePDF(
+	punto_de_venta,
+	numero_de_factura,
+	fecha,
+	fecha_servicio_desde,
+	fecha_servicio_hasta,
+	fecha_vencimiento_pago,
+	numero_de_documento,
+	importe_total,
+	condicion_iva_receptor,
+	cae,
+	cae_vencimiento,
+) {
 	// Nombre para el archivo (sin .pdf)
 	const name = 'PDF de prueba';
 
@@ -136,7 +137,7 @@ fastify.post('/bill', { schema: billSchema }, async function handler(request, re
 	};
 
 	// Agregamos los valores de la factura al template
-	const replacedBillTemplate = billTemplate({
+	const replacedBilltemplate = billTemplate({
 		punto_de_venta: String(punto_de_venta).padStart(4, '0'),
 		numero_de_factura: String(numero_de_factura).padStart(9, '0'),
 		fecha_emision: fecha,
@@ -153,19 +154,19 @@ fastify.post('/bill', { schema: billSchema }, async function handler(request, re
 		importe_neto: importe_total.toFixed(2).replace('.', ','),
 		importe_tributos: '0,00',
 		importe_total: importe_total.toFixed(2).replace('.', ','),
-		cae: billResponse.CAE,
-		cae_vencimiento: billResponse.CAEFchVto,
+		cae,
+		cae_vencimiento: cae_vencimiento,
 	});
 
 	// Creamos el PDF
 	const pdfResponse = await afip.ElectronicBilling.createPDF({
-		html: replacedBillTemplate,
+		html: replacedBilltemplate,
 		file_name: name,
 		options: options,
 	});
 
 	return pdfResponse;
-});
+}
 
 try {
 	await fastify.listen({ port: Number(process.env.PORT) || 3000 });
