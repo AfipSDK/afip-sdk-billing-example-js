@@ -46,14 +46,15 @@ fastify.post('/bill', { schema: BBillSchema }, async function handler(request, r
 	} = request.body;
 
 	/**
-	 * Obtenemos el número de la última Factura B
+	 * Obtenemos el número y fecha de la última Factura B
 	 **/
 	const tipo_de_factura = 6; // Factura B
-	const importe_total = importe_gravado + importe_iva + importe_exento_iva;
-	const fecha = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
 	const last_voucher = await afip.ElectronicBilling.getLastVoucher(punto_de_venta, tipo_de_factura);
+	const voucher_info = await afip.ElectronicBilling.getVoucherInfo(last_voucher, punto_de_venta, tipo_de_factura);
+	
 	const numero_de_factura = last_voucher + 1;
-
+	const importe_total = importe_gravado + importe_iva + importe_exento_iva;
+	
 	const data = {
 		CantReg: 1, // Cantidad de facturas a registrar
 		PtoVta: punto_de_venta,
@@ -63,7 +64,7 @@ fastify.post('/bill', { schema: BBillSchema }, async function handler(request, r
 		DocNro: numero_de_documento,
 		CbteDesde: numero_de_factura,
 		CbteHasta: numero_de_factura,
-		CbteFch: parseInt(fecha.replace(/-/g, '')),
+		CbteFch: voucher_info.CbteFch,
 		FchServDesde: fecha_servicio_desde,
 		FchServHasta: fecha_servicio_hasta,
 		FchVtoPago: fecha_vencimiento_pago,
@@ -97,7 +98,7 @@ fastify.post('/bill', { schema: BBillSchema }, async function handler(request, r
 	const pdfResponse = await generatePDF(
 		punto_de_venta,
 		numero_de_factura,
-		fecha,
+		voucher_info.CbteFch,
 		fecha_servicio_desde,
 		fecha_servicio_hasta,
 		fecha_vencimiento_pago,
@@ -136,17 +137,20 @@ async function generatePDF(
 		marginBottom: 0.4, // Margen inferior en pulgadas. Usar 0.1 para ticket
 	};
 
+	const parsedDate = `${fecha.slice(6, 8)}/${fecha.slice(4, 6)}/${fecha.slice(0, 4)}`;
+	const [year, month, day] = cae_vencimiento.split('-');
+	const caeParsedDate = `${day}/${month}/${year}`;
 	// Agregamos los valores de la factura al template
 	const replacedBilltemplate = billTemplate({
 		punto_de_venta: String(punto_de_venta).padStart(4, '0'),
 		numero_de_factura: String(numero_de_factura).padStart(9, '0'),
-		fecha_emision: fecha,
+		fecha_emision: parsedDate,
 		cuit_emisor: process.env.AFIP_CUIT,
 		ingresos_brutos: process.env.AFIP_CUIT,
-		fecha_inicio_actividades: fecha,
-		fecha_servicio_desde: fecha_servicio_desde || fecha,
-		fecha_servicio_hasta: fecha_servicio_hasta || fecha,
-		fecha_vencimiento_pago: fecha_vencimiento_pago || fecha,
+		fecha_inicio_actividades: parsedDate,
+		fecha_servicio_desde: fecha_servicio_desde || parsedDate,
+		fecha_servicio_hasta: fecha_servicio_hasta || parsedDate,
+		fecha_vencimiento_pago: fecha_vencimiento_pago || parsedDate,
 		numero_de_documento,
 		razon_social_receptor: '',
 		condicion_iva_receptor,
@@ -155,7 +159,7 @@ async function generatePDF(
 		importe_tributos: '0,00',
 		importe_total: importe_total.toFixed(2).replace('.', ','),
 		cae,
-		cae_vencimiento: cae_vencimiento,
+		cae_vencimiento: caeParsedDate,
 	});
 
 	// Creamos el PDF
