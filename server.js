@@ -54,7 +54,8 @@ fastify.post('/bill', { schema: BBillSchema }, async function handler(request, r
 	
 	const numero_de_factura = last_voucher + 1;
 	const importe_total = importe_gravado + importe_iva + importe_exento_iva;
-	
+	const fecha = Math.max(voucher_info.CbteFch, (parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, ''))));
+
 	const data = {
 		CantReg: 1, // Cantidad de facturas a registrar
 		PtoVta: punto_de_venta,
@@ -64,7 +65,7 @@ fastify.post('/bill', { schema: BBillSchema }, async function handler(request, r
 		DocNro: numero_de_documento,
 		CbteDesde: numero_de_factura,
 		CbteHasta: numero_de_factura,
-		CbteFch: voucher_info.CbteFch,
+		CbteFch: fecha,
 		FchServDesde: fecha_servicio_desde,
 		FchServHasta: fecha_servicio_hasta,
 		FchVtoPago: fecha_vencimiento_pago,
@@ -98,7 +99,7 @@ fastify.post('/bill', { schema: BBillSchema }, async function handler(request, r
 	const pdfResponse = await generatePDF(
 		punto_de_venta,
 		numero_de_factura,
-		voucher_info.CbteFch,
+		fecha,
 		fecha_servicio_desde,
 		fecha_servicio_hasta,
 		fecha_vencimiento_pago,
@@ -137,6 +138,7 @@ async function generatePDF(
 		marginBottom: 0.4, // Margen inferior en pulgadas. Usar 0.1 para ticket
 	};
 
+	fecha = fecha.toString();
 	const parsedDate = `${fecha.slice(6, 8)}/${fecha.slice(4, 6)}/${fecha.slice(0, 4)}`;
 	const [year, month, day] = cae_vencimiento.split('-');
 	const caeParsedDate = `${day}/${month}/${year}`;
