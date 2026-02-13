@@ -188,6 +188,7 @@ async function generatePDF({
 		file_name: name,
 		options: options,
 	});
+	pdfResponse.file_name = `${pdfResponse.file_name}.pdf` 
 
 	return pdfResponse;
 }

@@ -28,10 +28,6 @@ body {
 	cursor: not-allowed;
 }
 
-#bill-link {
-	display: none;
-}
-
 #error {
 	color: #dc2626;
 	background-color: #fef2f2;
