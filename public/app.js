@@ -1,10 +1,12 @@
 function app() {
 	const generateBillButton = document.querySelector('#bill-button');
+	const billLink = document.querySelector('#bill-link');
 	const errorDiv = document.querySelector('#error');
 
 	generateBillButton.addEventListener('click', async () => {
 		generateBillButton.textContent = 'Generando...';
 		generateBillButton.disabled = true;
+		billLink.style.display = 'none';
 		errorDiv.hidden = true;
 
 		try {
@@ -28,6 +30,8 @@ function app() {
 				throw new Error(data.message || JSON.stringify(data));
 			}
 
+			billLink.href = data.file;
+			billLink.style.display = 'inline';
 			await downloadPDF(data.file, data.file_name);
 		} catch (err) {
 			errorDiv.textContent = err.message;
