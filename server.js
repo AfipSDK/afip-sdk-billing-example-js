@@ -10,12 +10,10 @@ import 'dotenv/config';
 import { BBillSchema } from './src/schemas/bBill.js';
 import { getTodayAsNumber, formatDateNumber, formatDateNumberISO } from './src/utils/date.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+checkEnvs();
 const fastify = Fastify({ logger: true });
 await fastify.register(fastifyStatic, {
-	root: path.join(__dirname, 'public'),
+	root: path.join(path.dirname(fileURLToPath(import.meta.url)), 'public'),
 });
 
 let cert, key;
@@ -188,7 +186,7 @@ async function generatePDF({
 		file_name: name,
 		options: options,
 	});
-	pdfResponse.file_name = `${pdfResponse.file_name}.pdf` 
+	pdfResponse.file_name = `${pdfResponse.file_name}.pdf`;
 
 	return pdfResponse;
 }
@@ -223,6 +221,13 @@ async function generateQR({
 	// Preparamos el texto para el qr en base a https://www.afip.gob.ar/fe/qr/documentos/QRespecificaciones.pdf
 	const QRCodeText = `https://www.afip.gob.ar/fe/qr/?p=${btoa(JSON.stringify(QRCodeData))}`;
 	return await QRCode.toDataURL(QRCodeText);
+}
+
+function checkEnvs() {
+	if (!process.env.AFIP_CUIT || !process.env.AFIP_ACCESS_TOKEN || (!!process.env.AFIP_CERT_PATH !== !!process.env.AFIP_KEY_PATH)) {
+		console.error('ERROR: Falta configurar variables de ambiente revise el README para mas información.');
+		process.exit(1);
+	}
 }
 
 try {

@@ -1,4 +1,4 @@
-# AFIP SDK - Ejemplo de Facturación Electrónica
+# Afip SDK - Ejemplo de Facturación Electrónica
 
 Ejemplo de facturación electrónica con [Afip SDK](https://afipsdk.com/) usando Node.js y Fastify.
 
@@ -33,18 +33,16 @@ npm install
 Crear un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
 ```env
-PORT=3000
 AFIP_ACCESS_TOKEN=tu_access_token
 AFIP_CUIT=20409378472
 
---Opcional si se usa el cuit 20409378472--
+# Opcional si se usa el cuit 20409378472
 AFIP_KEY_PATH=./afip-keys/key.key
 AFIP_CERT_PATH=./afip-keys/cert.crt
 ```
 
 | Variable | Descripción |
 |---|---|
-| `PORT` | Puerto en el que corre el servidor |
 | `AFIP_CUIT` | CUIT del contribuyente emisor |
 | `AFIP_ACCESS_TOKEN` | Access token de Afip SDK |
 | `AFIP_CERT_PATH` | Ruta al certificado de AFIP |
