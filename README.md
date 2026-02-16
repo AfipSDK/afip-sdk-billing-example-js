@@ -15,7 +15,7 @@ Genera **Facturas B** a través de los web services de AFIP y devuelve un PDF de
 
 - **Node.js** (v18 o superior, ya que usa ESM y top-level `await`)
 - **CUIT** del contribuyente emisor
-- **Access Token** de [Afip SDK](https://afipsdk.com/)
+- **Access Token** de [Afip SDK](https://app.afipsdk.com/)
 
 **Opcional**
 - **Certificado y clave privada** de AFIP (archivos `.crt` y `.key`)
