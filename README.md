@@ -18,7 +18,7 @@ Genera **Facturas B** a través de los web services de AFIP y devuelve un PDF de
 - **Access Token** de [Afip SDK](https://app.afipsdk.com/)
 
 **Opcional**
-- **Certificado y clave privada** de AFIP (archivos `.crt` y `.key`)
+- **[Certificado y clave privada de AFIP](https://afipsdk.com/blog/como-obtener-certificado-para-web-services-arca/)** (archivos `.crt` y `.key`)
 Si se usa el cuit 20409378472 el certificado y key no son necesarios.
 
 
@@ -54,7 +54,7 @@ AFIP_CERT_PATH=./afip-keys/cert.crt
 npm run dev
 ```
 
-El servidor queda escuchando en `http://localhost:3000` (o el puerto configurado).
+El servidor queda escuchando en `http://localhost:4719`.
 
 ### Endpoint
 
