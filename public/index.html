@@ -3,17 +3,51 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>AFIP Facturación</title>
+		<title>Factura B con AfipSDK</title>
 		<link rel="stylesheet" href="style.css" />
 		<script src="./app.js" defer></script>
 	</head>
 	<body>
-		<div>
-			<button id="bill-button">Generar Factura B</button>
-		</div>
-		<div>
-			<a id="bill-link" href="#" target="_blank">Descargar Factura</a>
-		</div>
-		<div id="error" hidden></div>
+		<form id="bill-form">
+			<div>
+				<label for="numero-de-documento">Número de documento</label>
+				<input id="numero-de-documento" name="numero_de_documento" type="number" value="0" readonly />
+			</div>
+			<div>
+				<label for="tipo-de-documento">Tipo de documento</label>
+				<input id="tipo-de-documento" name="tipo_de_documento" type="number" value="99" readonly />
+			</div>
+			<div>
+				<label for="importe-gravado">Importe gravado</label>
+				<input id="importe-gravado" name="importe_gravado" type="number" value="100" readonly />
+			</div>
+			<div>
+				<label for="importe-exento-iva">Importe exento IVA</label>
+				<input id="importe-exento-iva" name="importe_exento_iva" type="number" value="0" readonly />
+			</div>
+			<div>
+				<label for="importe-iva">Importe IVA</label>
+				<input id="importe-iva" name="importe_iva" type="number" value="21" readonly />
+			</div>
+			<div>
+				<label for="punto-de-venta">Punto de venta</label>
+				<input id="punto-de-venta" name="punto_de_venta" type="number" value="1" readonly />
+			</div>
+			<div>
+				<label for="concepto">Concepto</label>
+				<input id="concepto" name="concepto" type="number" value="1" readonly />
+			</div>
+			<div>
+				<label for="condicion-iva-receptor">Condición IVA receptor</label>
+				<input id="condicion-iva-receptor" name="condicion_iva_receptor" type="number" value="5" readonly />
+			</div>
+			<div>
+				<button id="bill-button" type="button">Generar Factura B</button>
+			</div>
+			<div>
+				<a id="bill-link" href="#">Descargar Factura</a>
+			</div>
+		</form>
+		<div id="error"></div>
 	</body>
 </html>

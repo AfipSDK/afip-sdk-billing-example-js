@@ -7,7 +7,6 @@ import Handlebars from 'handlebars';
 import QRCode from 'qrcode';
 import Afip from '@afipsdk/afip.js';
 import 'dotenv/config';
-import { BBillSchema } from './src/schemas/bBill.js';
 import { getTodayAsNumber, formatDateNumber, formatDateNumberISO } from './src/utils/date.js';
 
 checkEnvs();
@@ -16,13 +15,23 @@ await fastify.register(fastifyStatic, {
 	root: path.join(path.dirname(fileURLToPath(import.meta.url)), 'public'),
 });
 
+/**
+ * Seteamos el Certificado y la Key si estan disponibles
+ */
 let cert, key;
 if (process.env.AFIP_CERT_PATH && process.env.AFIP_KEY_PATH) {
 	cert = fs.readFileSync(process.env.AFIP_CERT_PATH, { encoding: 'utf8' });
 	key = fs.readFileSync(process.env.AFIP_KEY_PATH, { encoding: 'utf8' });
 }
 
+/**
+ * Preparamos el template para generar el PDF de la factura de forma dinámica
+ */
 const billTemplate = Handlebars.compile(fs.readFileSync('./src/templates/bill.html', 'utf8'));
+
+/**
+ * Creamos la instancia de AfipSDK
+ */
 const afip = new Afip({
 	...(key && { key }),
 	...(cert && { cert }),
@@ -30,7 +39,7 @@ const afip = new Afip({
 	access_token: process.env.AFIP_ACCESS_TOKEN,
 });
 
-fastify.post('/bill', { schema: BBillSchema }, async function handler(request, reply) {
+fastify.post('/bill', {}, async function handler(request, reply) {
 	const {
 		numero_de_documento,
 		tipo_de_documento,
@@ -43,7 +52,7 @@ fastify.post('/bill', { schema: BBillSchema }, async function handler(request, r
 		fecha_servicio_desde = null,
 		fecha_servicio_hasta = null,
 		fecha_vencimiento_pago = null,
-	} = request.body;
+	} = getParsedData(request.body);
 
 	/**
 	 * Obtenemos el número y fecha de la última Factura B
@@ -224,10 +233,22 @@ async function generateQR({
 }
 
 function checkEnvs() {
-	if (!process.env.AFIP_CUIT || !process.env.AFIP_ACCESS_TOKEN || (!!process.env.AFIP_CERT_PATH !== !!process.env.AFIP_KEY_PATH)) {
+	if (
+		!process.env.AFIP_CUIT ||
+		!process.env.AFIP_ACCESS_TOKEN ||
+		!!process.env.AFIP_CERT_PATH !== !!process.env.AFIP_KEY_PATH
+	) {
 		console.error('ERROR: Falta configurar variables de ambiente revise el README para mas información.');
 		process.exit(1);
 	}
+}
+
+function getParsedData(data) {
+	const parsedData = { ...data };
+	for (key in parsedData) {
+		parsedData[key] = Number(parsedData[key]);
+	}
+	return parsedData;
 }
 
 try {

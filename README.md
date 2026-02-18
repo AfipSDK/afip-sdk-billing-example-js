@@ -36,7 +36,7 @@ Crear un archivo `.env` en la raíz del proyecto con las siguientes variables:
 AFIP_ACCESS_TOKEN=tu_access_token
 AFIP_CUIT=20409378472
 
-# Opcional si se usa el cuit 20409378472
+# Agregar estos envs si NO se usa el cuit 20409378472
 AFIP_KEY_PATH=./afip-keys/key.key
 AFIP_CERT_PATH=./afip-keys/cert.crt
 ```
@@ -51,7 +51,7 @@ AFIP_CERT_PATH=./afip-keys/cert.crt
 ## Uso
 
 ```bash
-node server.js
+npm run dev
 ```
 
 El servidor queda escuchando en `http://localhost:3000` (o el puerto configurado).

@@ -1,12 +1,52 @@
 body {
 	margin: 0;
-	height: 100vh;
+	min-height: 100vh;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
 	font-family: Arial, sans-serif;
-	gap: 15px;
+	background-color: #f1f5f9;
+	gap: 16px;
+}
+
+#bill-form {
+	background-color: #fff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 32px;
+	width: 100%;
+	max-width: 420px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+#bill-form div {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+#bill-form label {
+	font-size: 13px;
+	font-weight: 600;
+	color: #475569;
+}
+
+#bill-form input[readonly] {
+	padding: 8px 12px;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	background-color: #f8fafc;
+	color: #1e293b;
+	font-size: 15px;
+	cursor: not-allowed;
+}
+
+#bill-form > div:last-child {
+	margin-top: 8px;
 }
 
 #bill-button {
@@ -17,6 +57,7 @@ body {
 	border-radius: 6px;
 	background-color: #2563eb;
 	color: #fff;
+	width: 100%;
 }
 
 #bill-button:hover:not(:disabled) {
@@ -30,9 +71,19 @@ body {
 
 #bill-link {
 	display: none;
+	text-align: center;
+	font-size: 14px;
+	color: #2563eb;
+	text-decoration: none;
+	font-weight: 500;
+}
+
+#bill-link:hover {
+	text-decoration: underline;
 }
 
 #error {
+	display: none;
 	color: #dc2626;
 	background-color: #fef2f2;
 	border: 1px solid #fecaca;
