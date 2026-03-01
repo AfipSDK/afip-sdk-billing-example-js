@@ -9,7 +9,7 @@ Genera **Facturas B** a través de los web services de AFIP y devuelve un PDF de
 
 - Expone un endpoint `POST /bill` que recibe los datos de una factura.
 - Crea un comprobante electrónico (Factura B) en AFIP usando el servicio de facturación electrónica.
-- Genera un PDF de la factura a partir de un template HTML (Handlebars).
+- Genera un PDF de la factura usando templates de Afip SDK (`template: { name, params }`).
 - Incluye un frontend mínimo con un botón para generar una factura de prueba y descargar el PDF.
 
 ## Requisitos previos
@@ -94,5 +94,5 @@ La respuesta incluye la URL del PDF generado.
 
 - [Fastify](https://fastify.dev/) - Servidor HTTP
 - [@afipsdk/afip.js](https://www.npmjs.com/package/@afipsdk/afip.js) - SDK de AFIP
-- [Handlebars](https://handlebarsjs.com/) - Templates HTML para el PDF
+- [@afipsdk/afip.js](https://www.npmjs.com/package/@afipsdk/afip.js) - Generación de CAE y PDF con templates
 - [dotenv](https://www.npmjs.com/package/dotenv) - Variables de entorno

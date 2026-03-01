@@ -3,11 +3,10 @@ import fastifyStatic from '@fastify/static';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import Handlebars from 'handlebars';
-import QRCode from 'qrcode';
+
 import Afip from '@afipsdk/afip.js';
 import 'dotenv/config';
-import { getTodayAsNumber, formatDateNumber, formatDateNumberISO } from './src/utils/date.js';
+import { getTodayAsNumber, formatDateNumber } from './src/utils/date.js';
 
 checkEnvs();
 const fastify = Fastify({ logger: true });
@@ -24,10 +23,6 @@ if (process.env.AFIP_CERT_PATH && process.env.AFIP_KEY_PATH) {
 	key = fs.readFileSync(process.env.AFIP_KEY_PATH, { encoding: 'utf8' });
 }
 
-/**
- * Preparamos el template para generar el PDF de la factura de forma dinámica
- */
-const billTemplate = Handlebars.compile(fs.readFileSync('./src/templates/bill.html', 'utf8'));
 
 /**
  * Creamos la instancia de AfipSDK
@@ -103,21 +98,7 @@ fastify.post('/bill', {}, async function handler(request, reply) {
 	const billResponse = await afip.ElectronicBilling.createVoucher(data);
 
 	/**
-	 * Creamos el QR
-	 */
-	const qrUrl = await generateQR({
-		fecha,
-		punto_de_venta,
-		numero_de_factura,
-		tipo_de_factura,
-		importe_total,
-		numero_de_documento,
-		tipo_de_documento,
-		cae: billResponse.CAE,
-	});
-
-	/**
-	 * Generamos el PDF
+	 * Generamos el PDF usando templates
 	 **/
 	const pdfResponse = await generatePDF({
 		punto_de_venta,
@@ -131,7 +112,7 @@ fastify.post('/bill', {}, async function handler(request, reply) {
 		condicion_iva_receptor,
 		cae: billResponse.CAE,
 		cae_vencimiento: billResponse.CAEFchVto,
-		qr_url: qrUrl,
+		importe_iva,
 	});
 
 	return pdfResponse;
@@ -149,87 +130,57 @@ async function generatePDF({
 	condicion_iva_receptor,
 	cae,
 	cae_vencimiento,
-	qr_url,
+	importe_iva,
 }) {
-	// Nombre para el archivo (sin .pdf)
-	const name = 'PDF de prueba';
-
-	// Opciones para el archivo
-	const options = {
-		width: 8, // Ancho de pagina en pulgadas. Usar 3.1 para ticket
-		marginLeft: 0.4, // Margen izquierdo en pulgadas. Usar 0.1 para ticket
-		marginRight: 0.4, // Margen derecho en pulgadas. Usar 0.1 para ticket
-		marginTop: 0.4, // Margen superior en pulgadas. Usar 0.1 para ticket
-		marginBottom: 0.4, // Margen inferior en pulgadas. Usar 0.1 para ticket
-	};
-
 	const parsedDate = formatDateNumber(fecha);
 	const [year, month, day] = cae_vencimiento.split('-');
 	const caeParsedDate = `${day}/${month}/${year}`;
-	// Agregamos los valores de la factura al template
-	const replacedBilltemplate = billTemplate({
-		punto_de_venta: String(punto_de_venta).padStart(4, '0'),
-		numero_de_factura: String(numero_de_factura).padStart(9, '0'),
-		fecha_emision: parsedDate,
-		cuit_emisor: process.env.AFIP_CUIT,
-		ingresos_brutos: process.env.AFIP_CUIT,
-		fecha_inicio_actividades: parsedDate,
-		fecha_servicio_desde: fecha_servicio_desde || parsedDate,
-		fecha_servicio_hasta: fecha_servicio_hasta || parsedDate,
-		fecha_vencimiento_pago: fecha_vencimiento_pago || parsedDate,
-		numero_de_documento,
-		razon_social_receptor: '',
-		condicion_iva_receptor,
-		domicilio_receptor: '',
-		importe_neto: importe_total.toFixed(2).replace('.', ','),
-		importe_tributos: '0,00',
-		importe_total: importe_total.toFixed(2).replace('.', ','),
-		cae,
-		cae_vencimiento: caeParsedDate,
-		qr_url,
-	});
 
-	// Creamos el PDF
 	const pdfResponse = await afip.ElectronicBilling.createPDF({
-		html: replacedBilltemplate,
-		file_name: name,
-		options: options,
+		file_name: `factura-b-${String(numero_de_factura).padStart(8, '0')}.pdf`,
+		template: {
+			name: 'invoice-b',
+			params: {
+				voucher_number: Number(numero_de_factura),
+				sales_point: Number(punto_de_venta),
+				issue_date: parsedDate,
+				cae_due_date: caeParsedDate,
+				issuer_cuit: Number(process.env.AFIP_CUIT),
+				cae: String(cae),
+				issuer_business_name: 'Empresa imaginaria S.A.',
+				issuer_address: 'Calle falsa 123',
+				issuer_iva_condition: 'Responsable inscripto',
+				issuer_gross_income: String(process.env.AFIP_CUIT),
+				issuer_activity_start_date: parsedDate,
+				receiver_name: '',
+				receiver_address: '-',
+				receiver_document_type: 99,
+				receiver_document_number: Number(numero_de_documento),
+				receiver_iva_condition: String(condicion_iva_receptor),
+				sale_condition: 'Contado',
+				currency_id: 'ARS',
+				currency_rate: 1,
+				concept: 1,
+				billing_from: fecha_servicio_desde ? formatDateNumber(fecha_servicio_desde) : undefined,
+				billing_to: fecha_servicio_hasta ? formatDateNumber(fecha_servicio_hasta) : undefined,
+				payment_due_date: fecha_vencimiento_pago ? formatDateNumber(fecha_vencimiento_pago) : undefined,
+				items: [
+					{
+						code: '001',
+						description: 'Servicio',
+						quantity: 1,
+						unit_price: Number(importe_total),
+						subtotal: Number(importe_total),
+					},
+				],
+				vat_amount: Number(importe_iva),
+				tributes_amount: 0,
+				total_amount: Number(importe_total),
+			},
+		},
 	});
-	pdfResponse.file_name = `${pdfResponse.file_name}.pdf`;
 
 	return pdfResponse;
-}
-
-async function generateQR({
-	fecha,
-	punto_de_venta,
-	numero_de_factura,
-	tipo_de_factura,
-	importe_total,
-	numero_de_documento,
-	tipo_de_documento,
-	cae,
-}) {
-	// Datos para el QR (Respetar si es string o numero)
-	const QRCodeData = {
-		ver: 1, // Versión del formato de los datos (1 por defecto)
-		fecha: formatDateNumberISO(fecha), // Fecha de emisión del comprobante
-		cuit: Number(process.env.AFIP_CUIT), // Cuit del Emisor del comprobante
-		ptoVta: punto_de_venta, // Punto de venta utilizado para emitir el comprobante
-		tipoCmp: tipo_de_factura, // Tipo de comprobante
-		nroCmp: numero_de_factura, // Tipo de comprobante
-		importe: importe_total, // Importe Total del comprobante (en la moneda en la que fue emitido)
-		moneda: 'ARS', // Moneda del comprobante
-		ctz: 1, // Cotización en pesos argentinos de la moneda utilizada
-		tipoDocRec: tipo_de_documento, // Código del Tipo de documento del receptor
-		nroDocRec: numero_de_documento, // Número de documento del receptor
-		tipoCodAut: 'E', // “A” para comprobante autorizado por CAEA, “E” para comprobante autorizado por CAE
-		codAut: Number(cae), // CAE o CAEA, segun corresponda
-	};
-
-	// Preparamos el texto para el qr en base a https://www.afip.gob.ar/fe/qr/documentos/QRespecificaciones.pdf
-	const QRCodeText = `https://www.afip.gob.ar/fe/qr/?p=${btoa(JSON.stringify(QRCodeData))}`;
-	return await QRCode.toDataURL(QRCodeText);
 }
 
 function checkEnvs() {
