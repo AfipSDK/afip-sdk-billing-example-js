@@ -152,7 +152,7 @@ async function generatePDF({
 				issuer_iva_condition: 'Responsable inscripto',
 				issuer_gross_income: String(process.env.AFIP_CUIT),
 				issuer_activity_start_date: parsedDate,
-				receiver_name: '',
+				receiver_name: 'Consumidor Final',
 				receiver_address: '-',
 				receiver_document_type: 99,
 				receiver_document_number: Number(numero_de_documento),
